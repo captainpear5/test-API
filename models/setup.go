@@ -5,9 +5,9 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
 
-var database *gorm.DB
+var Database *gorm.DB
 
-func connectDatabase() {
+func ConnectDatabase() {
 	sqlDatabase, err := gorm.Open("sqlite3", "post.db")
 	if err != nil {
 		panic("Failed to connect to database!")
@@ -15,5 +15,5 @@ func connectDatabase() {
 
 	sqlDatabase.AutoMigrate(&Post{})
 
-	database = sqlDatabase
+	Database = sqlDatabase
 }

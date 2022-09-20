@@ -1,15 +1,18 @@
 package main
 
 import (
-	"github.com/captainpear5/test-API/models"
-
 	"github.com/gin-gonic/gin"
+	"github.com/test-API/test-API/controllers"
+	"github.com/test-API/test-API/models"
 )
 
 func main() {
 	r := gin.Default()
 
-	models.ConnectDatabase() // new
+	models.ConnectDatabase()
+
+	r.GET("/posts", controllers.GetAllPosts)
+	r.POST("/posts", controllers.CreatePost)
 
 	r.Run()
 }
