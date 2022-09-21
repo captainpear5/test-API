@@ -2,13 +2,14 @@ package controllers
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/test-API/test-API/models"
 )
 
 type CreatePostInput struct {
-	UserId int    `json:"UserId" binding:"required"`
+	UserId int    `json:"userId" binding:"required"`
 	Title  string `json:"title" binding:"required"`
 	Body   string `json:"body" binding:"required"`
 }
@@ -38,33 +39,48 @@ func CreatePost(c *gin.Context) {
 }
 
 // Getting all the posts by a specific user ID
-func getPostsByUserId(c *gin.Context) {
-	var post models.Post
+func GetPostsByUserId(c *gin.Context) {
+	var posts []models.Post
+	id, convError := strconv.Atoi(c.Param("userId"))
 
-	if err := models.Database.Where("UserId = ?", c.Param("userId")).Find(&post).Error; err != nil {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "No such user exists"})
+	if convError == nil {
+		if err := models.Database.Where("user_Id = ?", id).Find(&posts).Error; err != nil {
+			c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "This user has no posts"})
+			return
+		}
+		c.IndentedJSON(http.StatusOK, posts)
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, post)
+	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Invalid user id"})
 }
 
-/*
-func getPostsByUserId(id int) (*gorm.DB, error) {
-	var post models.Post
+// Get specific post according to its ID by a specific user ID
+func GetPostsByPostId(c *gin.Context) {
+	var posts []models.Post
 
-	userPosts := models.Database.Where("UserId = ?", id).Find(&post)
+	uId, uConvError := strconv.Atoi(c.Param("userId"))
+	pId, pConvError := strconv.Atoi(c.Param("id"))
 
-	if userPosts != nil {
-		return userPosts, nil
+	if uConvError == nil {
+		if err := models.Database.Where("user_Id = ?", uId).Find(&posts).Error; err != nil {
+			c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "This user has no posts"})
+			return
+		}
+		if pConvError == nil {
+			for i, p := range posts {
+				if p.Id == pId {
+					c.IndentedJSON(http.StatusOK, posts[i])
+					return
+				}
+			}
+		}
+		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Invalid post id"})
+		return
 	}
-
-	return nil, errors.New("no posts with this user id")
+	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Invalid user id"})
 }
 
-func readPostsByUserId(c *gin.Context) {
-	id, convError := strconv.Atoi(c.Param("UserId"))
+// Update the title and body of the post
 
-
-}
-*/
+// Delete posts
