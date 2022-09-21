@@ -14,6 +14,11 @@ type CreatePostInput struct {
 	Body   string `json:"body" binding:"required"`
 }
 
+type UpdatePostInput struct {
+	Title string `json:"title"`
+	Body  string `json:"body"`
+}
+
 // displaying all the posts in the database
 func GetAllPosts(c *gin.Context) {
 	var posts []models.Post
@@ -44,8 +49,9 @@ func GetPostsByUserId(c *gin.Context) {
 	id, convError := strconv.Atoi(c.Param("userId"))
 
 	if convError == nil {
-		if err := models.Database.Where("user_Id = ?", id).Find(&posts).Error; err != nil {
-			c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "This user has no posts"})
+		models.Database.Where("user_Id = ?", id).Find(&posts)
+		if len(posts) == 0 {
+			c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "No posts from this user"})
 			return
 		}
 		c.IndentedJSON(http.StatusOK, posts)
@@ -57,30 +63,59 @@ func GetPostsByUserId(c *gin.Context) {
 
 // Get specific post according to its ID by a specific user ID
 func GetPostsByPostId(c *gin.Context) {
-	var posts []models.Post
+	var post models.Post
 
 	uId, uConvError := strconv.Atoi(c.Param("userId"))
 	pId, pConvError := strconv.Atoi(c.Param("id"))
 
-	if uConvError == nil {
-		if err := models.Database.Where("user_Id = ?", uId).Find(&posts).Error; err != nil {
-			c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "This user has no posts"})
-			return
-		}
-		if pConvError == nil {
-			for i, p := range posts {
-				if p.Id == pId {
-					c.IndentedJSON(http.StatusOK, posts[i])
-					return
-				}
-			}
-		}
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Invalid post id"})
+	if uConvError != nil {
+		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Format of user id is invalid"})
+	}
+
+	if pConvError != nil {
+		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Format of post id is invalid"})
+	}
+
+	if err := models.Database.Where("user_Id = ?", uId).Where("id = ?", pId).Find(&post).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Post not found"})
 		return
 	}
-	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Invalid user id"})
+
+	c.IndentedJSON(http.StatusOK, post)
+
 }
 
 // Update the title and body of the post
+func UpdatePost(c *gin.Context) {
+	var post models.Post
+
+	uId, uConvError := strconv.Atoi(c.Param("userId"))
+	pId, pConvError := strconv.Atoi(c.Param("id"))
+
+	if uConvError != nil {
+		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Format of user id is invalid"})
+	}
+
+	if pConvError != nil {
+		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Format of post id is invalid"})
+	}
+
+	if err := models.Database.Where("user_Id = ?", uId).Where("id = ?", pId).Find(&post).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Post not found"})
+		return
+	}
+
+	// Validate input
+	var input UpdatePostInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	models.Database.Model(&post).Updates(input)
+
+	c.IndentedJSON(http.StatusOK, post)
+
+}
 
 // Delete posts
