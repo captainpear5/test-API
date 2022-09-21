@@ -13,6 +13,7 @@ func main() {
 
 	r.GET("/posts", controllers.GetAllPosts)
 	r.POST("/posts", controllers.CreatePost)
+	r.GET("/posts/:UserId", controllers.)
 
 	r.Run()
 }

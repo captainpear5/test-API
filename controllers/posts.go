@@ -21,6 +21,7 @@ func GetAllPosts(c *gin.Context) {
 
 }
 
+// Creating a post and storing it in the database
 func CreatePost(c *gin.Context) {
 	var input CreatePostInput
 
@@ -35,3 +36,35 @@ func CreatePost(c *gin.Context) {
 	c.IndentedJSON(http.StatusCreated, input)
 
 }
+
+// Getting all the posts by a specific user ID
+func getPostsByUserId(c *gin.Context) {
+	var post models.Post
+
+	if err := models.Database.Where("UserId = ?", c.Param("userId")).Find(&post).Error; err != nil {
+		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "No such user exists"})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, post)
+}
+
+/*
+func getPostsByUserId(id int) (*gorm.DB, error) {
+	var post models.Post
+
+	userPosts := models.Database.Where("UserId = ?", id).Find(&post)
+
+	if userPosts != nil {
+		return userPosts, nil
+	}
+
+	return nil, errors.New("no posts with this user id")
+}
+
+func readPostsByUserId(c *gin.Context) {
+	id, convError := strconv.Atoi(c.Param("UserId"))
+
+
+}
+*/
