@@ -105,7 +105,6 @@ func UpdatePost(c *gin.Context) {
 		return
 	}
 
-	// Validate input
 	var input UpdatePostInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -119,3 +118,26 @@ func UpdatePost(c *gin.Context) {
 }
 
 // Delete posts
+func DeletePost(c *gin.Context) {
+	var post models.Post
+
+	uId, uConvError := strconv.Atoi(c.Param("userId"))
+	pId, pConvError := strconv.Atoi(c.Param("id"))
+
+	if uConvError != nil {
+		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Format of user id is invalid"})
+	}
+
+	if pConvError != nil {
+		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Format of post id is invalid"})
+	}
+
+	if err := models.Database.Where("user_Id = ?", uId).Where("id = ?", pId).Find(&post).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Post not found"})
+		return
+	}
+
+	models.Database.Delete(&post)
+
+	c.IndentedJSON(http.StatusOK, true)
+}

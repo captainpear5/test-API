@@ -15,6 +15,7 @@ func main() {
 	r.POST("/posts", controllers.CreatePost)
 	r.GET("/posts/:userId", controllers.GetPostsByUserId)
 	r.GET("/posts/:userId/:id", controllers.GetPostsByPostId)
-	r.PATCH("/posts/:userId/:id", controllers.GetPostsByPostId)
+	r.PATCH("/posts/:userId/:id", controllers.UpdatePost)
+	r.DELETE("/posts/:userId/:id", controllers.DeletePost)
 	r.Run()
 }
